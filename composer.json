@@ -1,0 +1,37 @@
+{
+    "name": "phpterminal/phpterminal-modules-test",
+    "description": "PHPTerminal-modules-test is an test module for PHPTerminal with some test data.",
+    "keywords": [
+        "php",
+        "terminal"
+    ],
+    "authors": [
+        {
+            "name": "Oyeaussie",
+            "email": "email@oyeaussie.com",
+            "homepage": "https://github.com/phpterminal/PHPTerminal-modules-test"
+        }
+    ],
+    "funding": [
+        {
+            "url": "https://github.com/sponsors/oyeaussie",
+            "type": "github"
+        },
+        {
+            "url": "https://buymeacoffee.com/oyeaussie",
+            "type": "other"
+        }
+    ],
+    "require": {
+        "php": "^7.2.5 || ^8.0",
+        "ext-json": "*",
+        "phpterminal/phpterminal": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "PHPTerminalModulesTest\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "license": "MIT"
+}
