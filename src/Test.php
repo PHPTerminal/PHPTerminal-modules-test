@@ -20,12 +20,71 @@ class Test extends Modules
         return $this;
     }
 
-    public function showTestData()
+    public function getCommands() : array
+    {
+        return
+            [
+                [
+                    "availableAt"   => "enable",
+                    "command"       => "",
+                    "description"   => "Test Input",
+                    "function"      => ""
+                ],
+                [
+                    "availableAt"   => "enable",
+                    "command"       => "test input data",
+                    "description"   => "Example on how data can be input and given back as an array.",
+                    "function"      => "testInputData"
+                ],
+                [
+                    "availableAt"   => "enable",
+                    "command"       => "",
+                    "description"   => "Test output",
+                    "function"      => ""
+                ],
+                [
+                    "availableAt"   => "enable",
+                    "command"       => "show test data single",
+                    "description"   => "Shows single array test data to display different outputs.",
+                    "function"      => "show"
+                ],
+                [
+                    "availableAt"   => "enable",
+                    "command"       => "show test data multiple",
+                    "description"   => "Shows multiple array (rows) test data to display different outputs.",
+                    "function"      => "show"
+                ]
+            ];
+    }
+
+    public function testInputData()
+    {
+        $this->terminal->addResponse(
+            strtoupper('note: Test output will be returned as array to your calling method.'),
+            2,
+            $this->getTestDataSingle($this->terminal->inputToArray($this->getTestInputDataFields()))
+        );
+
+        return true;
+    }
+
+    protected function showTestDataSingle()
     {
         $this->terminal->addResponse(
             '',
             0,
-            ['data' => $this->getData()],
+            ['data' => $this->getTestDataSingle()]
+        );
+
+        return true;
+    }
+
+    protected function showTestDataMultiple()
+    {
+        $this->terminal->addResponse(
+            '',
+            0,
+            ['data' => $this->getTestDataMultiple()],
             true,
             [
                 'name', 'position', 'office', 'extn.', 'salary'
@@ -38,26 +97,78 @@ class Test extends Modules
         return true;
     }
 
-    public function getCommands() : array
+    private function getTestInputDataFields()
     {
         return
             [
-                [
-                    "availableAt"   => "enable",
-                    "command"       => "",
-                    "description"   => "Test Commands",
-                    "function"      => ""
-                ],
-                [
-                    "availableAt"   => "enable",
-                    "command"       => "show test data",
-                    "description"   => "Shows test data to display different outputs.",
-                    "function"      => "showTestData"
-                ]
+                'username', 'first_name', 'last_name', 'password__secret'
             ];
     }
 
-    private function getData()
+    private function getTestDataSingle(array $inputData = null)
+    {
+        if ($inputData) {
+            return ['input data' => $inputData];
+        }
+
+        return
+            [
+                "running configuration" =>
+                    [
+                        "_id"               => 1,
+                        "hostname"          => "phpterminal",
+                        "banner"            => "Welcome to PHP Terminal!\nType help or ? (question mark) for help.\n",
+                        "active_module"     => "test",
+                        "modules"           =>
+                        [
+                            "base"              =>
+                            [
+                                "name"              => "base",
+                                "package_name"      => "phpterminal/phpterminal",
+                                "description"       => "PHP Terminal Base Module",
+                                "location"          => "/var/www/html/projects/phpterminal/src/BaseModules/",
+                                "version"           => "viaGit"
+                            ],
+                            "firewall"          =>
+                            [
+                                "name"              => "firewall",
+                                "package_name"      => "phpterminal/phpterminal-modules-firewall",
+                                "description"       => "PHPTerminal-modules-firewall is an firewall module for PHPTerminal to manage PHPFirewall library.",
+                                "location"          => "/var/www/html/projects/phpterminal/vendor/phpterminal/phpterminal-modules-firewall/src/",
+                                "version"           => "0.1.0"
+                            ],
+                            "test"              =>
+                            [
+                                "name"              => "test",
+                                "package_name"      => "phpterminal/phpterminal-modules-test",
+                                "description"       => "PHPTerminal-modules-test is an test module for PHPTerminal with some test data.",
+                                "location"          => "/var/www/html/projects/phpterminal/vendor/phpterminal/phpterminal-modules-test/src/",
+                                "version"           => "0.1.0"
+                            ]
+                        ],
+                        "plugins"           =>
+                        [
+                            "auth"              =>
+                            [
+                                "name"              => "auth",
+                                "package_name"      => "phpterminal/phpterminal-plugins-auth",
+                                "description"       => "PHPTerminal-plugins-auth is an authentication plugin for phpterminal application.",
+                                "class"             => "PHPTerminalPluginsAuth\\Auth",
+                                "version"           => "0.1.0",
+                                "settings"          =>
+                                [
+                                    "cost"              => 4,
+                                    "hash"              => "PASSWORD_BCRYPT",
+                                    "canResetPasswd"    => true
+                                ]
+                            ]
+                        ],
+                        "updatedAt"         => 1721273518
+                    ]
+            ];
+    }
+
+    private function getTestDataMultiple()
     {
         return
             [
