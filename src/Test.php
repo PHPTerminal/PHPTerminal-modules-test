@@ -57,9 +57,11 @@ class Test extends Modules
             ];
     }
 
-    public function onInstall()
+    public function onInstall() : object
     {
         $this->terminal->config['modules']['test']['banner'] = 'PHPTerminal-modules-test is an test module for PHPTerminal with some test data.';
+
+        return $this;
     }
 
     public function testInputData()
