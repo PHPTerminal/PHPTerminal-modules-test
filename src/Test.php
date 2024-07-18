@@ -59,13 +59,18 @@ class Test extends Modules
 
     public function testInputData()
     {
-        $this->terminal->addResponse(
-            strtoupper('note: Test output will be returned as array to your calling method.'),
-            2,
-            $this->getTestDataSingle($this->terminal->inputToArray($this->getTestInputDataFields()))
-        );
+        $inputData = $this->terminal->inputToArray($this->getTestInputDataFields());
 
-        return true;
+        if ($inputData) {
+            $this->terminal->addResponse(
+                strtoupper('note: Test output will be returned as array to your calling method.'),
+                2,
+                $this->getTestDataSingle($inputData)
+            );
+            return true;
+        }
+
+        return false;
     }
 
     protected function showTestDataSingle()
