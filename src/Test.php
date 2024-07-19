@@ -27,7 +27,7 @@ class Test extends Modules
                 [
                     "availableAt"   => "enable",
                     "command"       => "",
-                    "description"   => "Test Input",
+                    "description"   => "Test Input commands",
                     "function"      => ""
                 ],
                 [
@@ -39,7 +39,13 @@ class Test extends Modules
                 [
                     "availableAt"   => "enable",
                     "command"       => "",
-                    "description"   => "Test output",
+                    "description"   => "",
+                    "function"      => ""
+                ],
+                [
+                    "availableAt"   => "enable",
+                    "command"       => "",
+                    "description"   => "Test output commands",
                     "function"      => ""
                 ],
                 [
