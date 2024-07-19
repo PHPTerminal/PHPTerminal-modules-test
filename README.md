@@ -5,6 +5,7 @@ PHPTerminal-modules-test is an test module for PHPTerminal with some test data.
 Thanks to the following projects for their great work. Without them, this project would not be possible.<br>
 
 Composer<br>
+https://datatables.net/ - for their test data<br>
 
 <h2>Issues/Discussions/New features:</h2>
 Feel free to open an issue in case of a bug or to discuss anything related to the tool or to add a new feature.
