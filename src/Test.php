@@ -2,6 +2,7 @@
 
 namespace PHPTerminalModulesTest;
 
+use JasonGrimes\Paginator;
 use PHPTerminal\Modules;
 use PHPTerminal\Terminal;
 
@@ -27,7 +28,7 @@ class Test extends Modules
                 [
                     "availableAt"   => "enable",
                     "command"       => "",
-                    "description"   => "Test Input commands",
+                    "description"   => "Test Input",
                     "function"      => ""
                 ],
                 [
@@ -39,13 +40,7 @@ class Test extends Modules
                 [
                     "availableAt"   => "enable",
                     "command"       => "",
-                    "description"   => "",
-                    "function"      => ""
-                ],
-                [
-                    "availableAt"   => "enable",
-                    "command"       => "",
-                    "description"   => "Test output commands",
+                    "description"   => "Test output",
                     "function"      => ""
                 ],
                 [
@@ -58,6 +53,12 @@ class Test extends Modules
                     "availableAt"   => "enable",
                     "command"       => "show test data multiple",
                     "description"   => "Shows multiple array (rows) test data to display different outputs.",
+                    "function"      => "show"
+                ],
+                [
+                    "availableAt"   => "enable",
+                    "command"       => "show test data multiple paged",
+                    "description"   => "Show test data using pagination. show test data multiple paged control will allow you to control display of next page.",
                     "function"      => "show"
                 ]
             ];
@@ -111,6 +112,86 @@ class Test extends Modules
                 25,30,25,7,15
             ]
         );
+
+        return true;
+    }
+
+    protected function showTestDataMultiplePaged($args)
+    {
+        //We are not sending data back to phpterminal as phpterminal default output addResponse does not support pagination.
+        //addRespnose's job is to just dump the data in a table/list format. What data is provided to it depends on the command
+        //You can instruct the command to show a particular page using the args that you pass. This command demonstrate that.
+        $items = $this->getTestDataMultiple();
+        //We add ID to all items starting from 1 for demo purposes.
+        foreach ($items as $itemKey => &$item) {
+            $item['id'] = $itemKey + 1;
+        }
+
+        //We create pagination for the items.
+        $totalItems = count($items);
+        $itemsPerPage = $args[1] ?? 10;
+        $currentPage = $args[2] ?? 1;
+
+        $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage);
+
+        $pages = $paginator->getPages();
+
+        //Now we chunk the items as per itemsPerPage.
+        $items = array_chunk($items, $itemsPerPage);
+
+        if (in_array('control', $args)) {//Show controls example sapce for next page and q to quit the execution of command.
+            $pageCounter = 0;
+
+            while (isset($pages[$pageCounter])) {
+                $rows = $items[$pageCounter];
+                array_walk($rows, function(&$row) {
+                    $row = array_replace(array_flip(['id', 'name', 'position', 'office', 'extn.', 'salary']), $row);
+                    $row = array_values($row);
+                });
+
+                $table = new \cli\Table();
+                $table->setHeaders(['ID', 'NAME', 'POSITION', 'OFFICE', 'EXTN.', 'SALARY']);
+                $table->setRows($rows);
+                $table->setRenderer(new \cli\table\Ascii([5,25,30,25,7,15]));
+                $table->display();
+
+                \cli\line("%bHit space bar for next page or q to quit%w" . PHP_EOL);
+                readline_callback_handler_install("", function () {});
+
+                while (true) {
+                    $input = stream_get_contents(STDIN, 1);
+
+                    if (ord($input) == 32) {
+                        break;
+                    } else if (ord($input) == 113) {
+                        readline_callback_handler_remove();
+                        return true;
+                    }
+                }
+
+                readline_callback_handler_remove();
+
+                if (!isset($pages[$pageCounter + 1])) {
+                    return true;
+                }
+
+                $pageCounter++;
+            }
+        } else {
+            foreach ($pages as $key => $page) {
+                $rows = $items[$page['num'] - 1];
+                array_walk($rows, function(&$row) {
+                    $row = array_replace(array_flip(['id', 'name', 'position', 'office', 'extn.', 'salary']), $row);
+                    $row = array_values($row);
+                });
+
+                $table = new \cli\Table();
+                $table->setHeaders(['ID', 'NAME', 'POSITION', 'OFFICE', 'EXTN.', 'SALARY']);
+                $table->setRows($rows);
+                $table->setRenderer(new \cli\table\Ascii([5,25,30,25,7,15]));
+                $table->display();
+            }
+        }
 
         return true;
     }
