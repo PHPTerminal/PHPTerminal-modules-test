@@ -83,6 +83,13 @@ class Test extends Modules
         return $this;
     }
 
+    public function onActive() : object
+    {
+        echo "\nActivating test module. This message was echoed using onActive() method\n";
+
+        return $this;
+    }
+
     public function testInputData()
     {
         $inputData = $this->terminal->inputToArray($this->getTestInputDataFields());
