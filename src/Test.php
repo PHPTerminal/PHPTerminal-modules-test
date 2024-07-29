@@ -5,6 +5,7 @@ namespace PHPTerminalModulesTest;
 use JasonGrimes\Paginator;
 use PHPTerminal\Modules;
 use PHPTerminal\Terminal;
+use SleekDB\Store;
 
 class Test extends Modules
 {
@@ -12,11 +13,15 @@ class Test extends Modules
 
     protected $command;
 
+    protected $testStore;
+
     public function init(Terminal $terminal = null, $command) : object
     {
         $this->terminal = $terminal;
 
         $this->command = $command;
+
+        $this->testStore = new Store("test", $this->terminal->databaseDirectory, $this->terminal->storeConfiguration);
 
         return $this;
     }
@@ -81,6 +86,15 @@ class Test extends Modules
         $this->terminal->setCommandIgnoreChars(['.',':']);
 
         $this->terminal->config['modules']['test']['banner'] = 'PHPTerminal-modules-test is an test module for PHPTerminal with some test data.';
+
+        $admin = $this->testStore->updateOrInsertMany($this->getTestDataMultiple());
+
+        return $this;
+    }
+
+    public function onUninstall() : object
+    {
+        $this->testStore->deleteStore();
 
         return $this;
     }
