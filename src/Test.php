@@ -45,6 +45,18 @@ class Test extends Modules
                 ],
                 [
                     "availableAt"   => "enable",
+                    "command"       => "show test public method",
+                    "description"   => "Shows output from public method.",
+                    "function"      => "showTestPublicMethod"
+                ],
+                [
+                    "availableAt"   => "enable",
+                    "command"       => "show test protected method",
+                    "description"   => "Shows output from protected method.",
+                    "function"      => "show"
+                ],
+                [
+                    "availableAt"   => "enable",
                     "command"       => "show test data single",
                     "description"   => "Shows single array test data to display different outputs.",
                     "function"      => "show"
@@ -85,6 +97,22 @@ class Test extends Modules
         }
 
         return false;
+    }
+
+    public function showTestPublicMethod()
+    {
+        echo "This is public method\n\n";
+
+        return true;
+    }
+
+    protected function showTestProtectedMethod($args = [])
+    {
+        echo "This is protected method\n\n";
+
+        print_r($args);
+
+        return true;
     }
 
     protected function showTestDataSingle()
