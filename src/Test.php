@@ -127,9 +127,17 @@ class Test extends Modules
     protected function showTestDataSingle()
     {
         $this->terminal->addResponse(
-            '',
+            'Success!',
             0,
-            ['data' => $this->getTestDataSingle()]
+            [
+                'data'  => $this->getTestDataSingle(),
+                'data2' => 'test',
+                'data3' =>
+                [
+                    'd31' => 'test1',
+                    'd32' => 'test2'
+                ]
+            ]
         );
 
         return true;
@@ -138,7 +146,7 @@ class Test extends Modules
     protected function showTestDataMultiple()
     {
         $this->terminal->addResponse(
-            '',
+            'Success! Showing multiple rows data',
             0,
             ['data' => $this->getTestDataMultiple()],
             true,
