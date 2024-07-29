@@ -87,7 +87,7 @@ class Test extends Modules
 
         $this->terminal->config['modules']['test']['banner'] = 'PHPTerminal-modules-test is an test module for PHPTerminal with some test data.';
 
-        $admin = $this->testStore->updateOrInsertMany($this->getTestDataMultiple());
+        $this->testStore->updateOrInsertMany($this->getTestDataMultiple());
 
         return $this;
     }
