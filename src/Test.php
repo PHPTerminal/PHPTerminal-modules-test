@@ -5,6 +5,8 @@ namespace PHPTerminalModulesTest;
 use JasonGrimes\Paginator;
 use PHPTerminal\Modules;
 use PHPTerminal\Terminal;
+use SleekDB\Cache;
+use SleekDB\Classes\IoHelper;
 use SleekDB\Store;
 
 class Test extends Modules
@@ -68,14 +70,14 @@ class Test extends Modules
                 ],
                 [
                     "availableAt"   => "enable",
-                    "command"       => "show test data multiple",
-                    "description"   => "Shows multiple array (rows) test data to display different outputs.",
+                    "command"       => "show test data multiple paged",
+                    "description"   => "Show test data using pagination. show test data multiple paged control will allow you to control display of next page.",
                     "function"      => "show"
                 ],
                 [
                     "availableAt"   => "enable",
-                    "command"       => "show test data multiple paged",
-                    "description"   => "Show test data using pagination. show test data multiple paged control will allow you to control display of next page.",
+                    "command"       => "show test data multiple",
+                    "description"   => "Shows multiple array (rows) test data to display different outputs.",
                     "function"      => "show"
                 ]
             ];
@@ -162,7 +164,7 @@ class Test extends Modules
         $this->terminal->addResponse(
             'Success! Showing multiple rows data',
             0,
-            ['data' => $this->getTestDataMultiple()],
+            ['data' => $this->testStore->findAll()],
             true,
             [
                 'name', 'position', 'office', 'extn.', 'salary'
@@ -180,76 +182,105 @@ class Test extends Modules
         //We are not sending data back to phpterminal as phpterminal default output addResponse does not support pagination.
         //addRespnose's job is to just dump the data in a table/list format. What data is provided to it depends on the command
         //You can instruct the command to show a particular page using the args that you pass. This command demonstrate that.
-        $items = $this->getTestDataMultiple();
-        //We add ID to all items starting from 1 for demo purposes.
-        foreach ($items as $itemKey => &$item) {
-            $item['id'] = $itemKey + 1;
+        if (isset($args[0]) && ((int) $args[0] === 0 || (int) $args[0] > 20)) {
+            $this->terminal->addResponse('Limit value should be a number. Please provide correct value. Max is 20.', 1);
+
+            return true;
         }
 
-        //We create pagination for the items.
-        $totalItems = count($items);
-        $itemsPerPage = $args[1] ?? 10;
-        $currentPage = $args[2] ?? 1;
+        if (isset($args[1]) && (int) $args[1] === 0) {
+            $this->terminal->addResponse('Page number value should be a number. Please provide correct value!', 1);
 
-        $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage);
+            return true;
+        }
+
+        $itemsPerPage = $args[0] ?? 10;
+        $currentPage = $args[1] ?? 1;
+
+        if ($this->testStore->_getUseCache() === true) {
+            $cacheTokenArray = ["count" => true];
+            $cache = new Cache($this->testStore->getStorePath(), $cacheTokenArray, null);
+            $cache->delete();
+            $totalItems = $this->testStore->count();
+            IoHelper::updateFileContent($this->testStore->getStorePath() . '_cnt.sdb', function() use ($totalItems) {
+                return $totalItems;
+            });
+        } else {
+            $totalItems = $this->testStore->count();
+        }
+
+        $paginator = new Paginator((int) $totalItems, (int) $itemsPerPage, (int) $currentPage);
+        if ($paginator->getNumPages() > 3) {
+            $paginator->setMaxPagesToShow($paginator->getNumPages());
+        }
 
         $pages = $paginator->getPages();
+        //The package paginator is designed to show minimum 3 pages worth of data, which is quite weird.
+        //We have to add a dummy array to pages, so that the while look will work once.
+        if (count($pages) === 0) {
+            $pages[0] = [];
+        }
 
-        //Now we chunk the items as per itemsPerPage.
-        $items = array_chunk($items, $itemsPerPage);
+        $pageCounter = ((int) $currentPage - 1);
 
-        if (in_array('control', $args)) {//Show controls example sapce for next page and q to quit the execution of command.
-            $pageCounter = 0;
+        $headers =
+            [
+                'id', 'name', 'position', 'office', 'extn.', 'salary'
+            ];
+        $columns =
+            [
+                5,25,30,25,7,15
+            ];
 
-            while (isset($pages[$pageCounter])) {
-                $rows = $items[$pageCounter];
-                array_walk($rows, function(&$row) {
-                    $row = array_replace(array_flip(['id', 'name', 'position', 'office', 'extn.', 'salary']), $row);
-                    $row = array_values($row);
-                });
+        while (isset($pages[$pageCounter])) {
+            $items = $this->testStore->findAll(['id' => 'asc'], $itemsPerPage, ((int) $itemsPerPage * $pageCounter));
 
-                $table = new \cli\Table();
-                $table->setHeaders(['ID', 'NAME', 'POSITION', 'OFFICE', 'EXTN.', 'SALARY']);
-                $table->setRows($rows);
-                $table->setRenderer(new \cli\table\Ascii([5,25,30,25,7,15]));
-                $table->display();
+            array_walk($items, function(&$item) use ($headers) {
+                $item = array_replace(array_flip($headers), $item);
+                $item = array_values($item);
+            });
 
-                \cli\line("%bHit space bar for next page or q to quit%w" . PHP_EOL);
-                readline_callback_handler_install("", function () {});
+            $table = new \cli\Table();
+            $table->setHeaders($headers);
+            $table->setRows($items);
+            $table->setRenderer(new \cli\table\Ascii($columns));
+            $table->display();
 
-                while (true) {
-                    $input = stream_get_contents(STDIN, 1);
+            $lastpage = false;
+            $rowsCount = count($items);
+            if (($pageCounter + 1) === count($pages)) {
+                $rowsCounter = $totalItems;
+                $lastpage = true;
+            } else {
+                $rowsCounter = ($rowsCount * ($pageCounter + 1));
+            }
+            \cli\line('%cShowing record : ' . $rowsCounter . '/' . $totalItems . '. Page : ' . ($pageCounter + 1) . '/' . count($pages) . '. ');
+            if ($lastpage) {
+                \cli\line('%w');
+                return true;
+            }
+            \cli\line('%bHit space bar or n for next page, p for previous page, q to quit%w' . PHP_EOL);
 
-                    if (ord($input) == 32) {
-                        break;
-                    } else if (ord($input) == 113) {
-                        readline_callback_handler_remove();
-                        return true;
-                    }
-                }
+            readline_callback_handler_install("", function () {});
 
-                readline_callback_handler_remove();
+            while (true) {
+                $input = stream_get_contents(STDIN, 1);
 
-                if (!isset($pages[$pageCounter + 1])) {
+                if (ord($input) == 32 || ord($input) == 110 || ord($input) == 78) {//Next space or n
+                    $pageCounter++;
+
+                    break;
+                } else if (ord($input) == 112 || ord($input) == 80) {//Previous
+                    $pageCounter--;
+
+                    break;
+                } else if (ord($input) == 113 || ord($input) == 81) {
+                    readline_callback_handler_remove();
                     return true;
                 }
-
-                $pageCounter++;
             }
-        } else {
-            foreach ($pages as $key => $page) {
-                $rows = $items[$page['num'] - 1];
-                array_walk($rows, function(&$row) {
-                    $row = array_replace(array_flip(['id', 'name', 'position', 'office', 'extn.', 'salary']), $row);
-                    $row = array_values($row);
-                });
 
-                $table = new \cli\Table();
-                $table->setHeaders(['ID', 'NAME', 'POSITION', 'OFFICE', 'EXTN.', 'SALARY']);
-                $table->setRows($rows);
-                $table->setRenderer(new \cli\table\Ascii([5,25,30,25,7,15]));
-                $table->display();
-            }
+            readline_callback_handler_remove();
         }
 
         return true;
