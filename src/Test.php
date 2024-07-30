@@ -110,7 +110,16 @@ class Test extends Modules
 
     public function testInputData()
     {
-        $inputData = $this->terminal->inputToArray($this->getTestInputDataFields());
+        $inputData =
+            $this->terminal->inputToArray(
+                $this->getTestInputDataFields(),
+                ['location' => ['Sydney', 'Melbourne', 'Perth']],
+                $this->getTestInputDataFieldsDefaultValues(),
+                $this->getTestInputDataFieldsData(),
+                ['username' => true],
+                3,
+                false
+            );
 
         if ($inputData) {
             $this->terminal->addResponse(
@@ -122,6 +131,34 @@ class Test extends Modules
         }
 
         return false;
+    }
+
+    private function getTestInputDataFields()
+    {
+        return
+            [
+                'username', 'first_name', 'last_name', 'location', 'password__secret'
+            ];
+    }
+
+    private function getTestInputDataFieldsDefaultValues()
+    {
+        return
+            [
+                'location'     => 'Melbourne'
+            ];
+    }
+
+    private function getTestInputDataFieldsData()
+    {
+        return
+            [
+                'username'          => 'oyeaussie',
+                'first_name'        => 'oyeaussie',
+                'last_name'         => 'oyeaussie',
+                'location'          => 'Melbourne',
+                'password'          => '123'
+            ];
     }
 
     public function showTestPublicMethod()
@@ -284,14 +321,6 @@ class Test extends Modules
         }
 
         return true;
-    }
-
-    private function getTestInputDataFields()
-    {
-        return
-            [
-                'username', 'first_name', 'last_name', 'password__secret'
-            ];
     }
 
     private function getTestDataSingle(array $inputData = null)
